@@ -29,7 +29,7 @@ class Gun(Entity):
             enabled=False
         )
         
-        # Create the crosshair entity BEFORE trying to use it
+        # Create the crosshair entity
         self.crosshair = Entity(
             parent=camera.ui,
             model=None,  # No model
@@ -85,7 +85,32 @@ class Gun(Entity):
         except:
             print("Sound file not found, using silent audio")
             self.shoot_sound = None
-                # Show muzzle flash briefly
+    
+    def update(self):
+        # Handle shooting cooldown
+        if not self.can_shoot:
+            self.shoot_cooldown -= time.dt
+            if self.shoot_cooldown <= 0:
+                self.can_shoot = True
+                self.shoot_cooldown = self.fire_rate
+        
+        # Handle shooting input
+        if mouse.left and self.can_shoot and self.ammo > 0:
+            self.shoot()
+    
+    def shoot(self):
+        # Consume ammo
+        self.ammo -= 1
+        self.ammo_text.text = f"AMMO: {self.ammo}/{self.max_ammo}"
+        
+        # Fire rate cooldown
+        self.can_shoot = False
+        
+        # Play sound if available
+        if self.shoot_sound:
+            self.shoot_sound.play()
+        
+        # Show muzzle flash briefly
         self.muzzle_flash.enabled = True
         invoke(setattr, self.muzzle_flash, 'enabled', False, delay=0.05)
         
@@ -126,5 +151,5 @@ class Gun(Entity):
             
         print("Reloading...")
         self.ammo = self.max_ammo
-        self.ammo_text.text = f"Ammo: {self.ammo}/{self.max_ammo}"
+        self.ammo_text.text = f"AMMO: {self.ammo}/{self.max_ammo}"
         print("Reload complete!")
