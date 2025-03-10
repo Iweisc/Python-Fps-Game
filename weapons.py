@@ -9,7 +9,6 @@ class Gun(Entity):
             position=(0.6, -0.3, 1),
             color=color.black
         )
-        
         # Gun properties
         self.max_ammo = 30
         self.ammo = self.max_ammo
@@ -30,45 +29,54 @@ class Gun(Entity):
             enabled=False
         )
         
-        # Create a Minecraft-style crosshair
-        self.crosshair = Entity(parent=camera.ui)
+        # Create the crosshair entity BEFORE trying to use it
+        self.crosshair = Entity(
+            parent=camera.ui,
+            model=None,  # No model
+            color=color.clear  # Transparent color
+        )
         
-        # Create the four lines of the crosshair with a gap in the middle
-        crosshair_thickness = 0.002
-        crosshair_length = 0.008
-        crosshair_gap = 0.004
+        # Tiny crosshair parameters
+        crosshair_thickness = 0.0001  # Very thin lines
+        crosshair_length = 0.001      # Very short lines
+        crosshair_gap = 0.001         # Small gap
         crosshair_color = color.white
         
-        # Top line
-        Entity(parent=self.crosshair, model='quad', 
-               scale=(crosshair_thickness, crosshair_length), 
-               position=(0, crosshair_gap/2), 
+        # Crosshair lines
+        Entity(parent=self.crosshair, model='quad',
+               scale=(crosshair_thickness, crosshair_length),
+               position=(0, crosshair_gap/2),
                color=crosshair_color)
-        
-        # Bottom line
-        Entity(parent=self.crosshair, model='quad', 
-               scale=(crosshair_thickness, crosshair_length), 
-               position=(0, -crosshair_gap/2), 
+        Entity(parent=self.crosshair, model='quad',
+               scale=(crosshair_thickness, crosshair_length),
+               position=(0, -crosshair_gap/2),
                color=crosshair_color)
-        
-        # Left line
-        Entity(parent=self.crosshair, model='quad', 
-               scale=(crosshair_length, crosshair_thickness), 
-               position=(-crosshair_gap/2, 0), 
+        Entity(parent=self.crosshair, model='quad',
+               scale=(crosshair_length, crosshair_thickness),
+               position=(-crosshair_gap/2, 0),
                color=crosshair_color)
+        Entity(parent=self.crosshair, model='quad',
+               scale=(crosshair_length, crosshair_thickness),
+               position=(crosshair_gap/2, 0),
+               color=crosshair_color)        
         
-        # Right line
-        Entity(parent=self.crosshair, model='quad', 
-               scale=(crosshair_length, crosshair_thickness), 
-               position=(crosshair_gap/2, 0), 
-               color=crosshair_color)
+        # Improved ammo counter with background
+        self.ammo_bg = Entity(
+            parent=camera.ui,
+            model='quad',
+            scale=(0.2, 0.06),
+            position=(0.7, -0.4),
+            color=color.rgba(0, 0, 0, 0.7)
+        )
         
-        # Ammo counter
+        # Ammo counter with better visibility
         self.ammo_text = Text(
             parent=camera.ui,
-            text=f"Ammo: {self.ammo}/{self.max_ammo}",
-            position=(-0.7, -0.4),
-            scale=2
+            text=f"AMMO: {self.ammo}/{self.max_ammo}",
+            position=(0.7, -0.4),
+            origin=(0, 0),
+            scale=1.5,
+            color=color.white
         )
         
         # Try to load sounds, use dummy if not found
@@ -77,33 +85,7 @@ class Gun(Entity):
         except:
             print("Sound file not found, using silent audio")
             self.shoot_sound = None
-    
-    # Rest of the class remains the same...
-    def update(self):
-        # Handle shooting cooldown
-        if not self.can_shoot:
-            self.shoot_cooldown -= time.dt
-            if self.shoot_cooldown <= 0:
-                self.can_shoot = True
-                self.shoot_cooldown = self.fire_rate
-        
-        # Handle shooting input
-        if mouse.left and self.can_shoot and self.ammo > 0:
-            self.shoot()
-    
-    def shoot(self):
-        # Consume ammo
-        self.ammo -= 1
-        self.ammo_text.text = f"Ammo: {self.ammo}/{self.max_ammo}"
-        
-        # Fire rate cooldown
-        self.can_shoot = False
-        
-        # Play sound if available
-        if self.shoot_sound:
-            self.shoot_sound.play()
-        
-        # Show muzzle flash briefly
+                # Show muzzle flash briefly
         self.muzzle_flash.enabled = True
         invoke(setattr, self.muzzle_flash, 'enabled', False, delay=0.05)
         
@@ -138,6 +120,7 @@ class Gun(Entity):
                 hit_info.entity.on_hit()
     
     def reload(self):
+        """Reload the weapon to full ammo"""
         if self.ammo == self.max_ammo:
             return
             
