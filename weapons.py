@@ -79,12 +79,25 @@ class Gun(Entity):
             color=color.white
         )
         
+        # Out of ammo notification
+        self.out_of_ammo_text = Text(
+            parent=camera.ui,
+            text="OUT OF AMMO! PRESS R TO RELOAD",
+            position=(0, 0.15),  # Above crosshair
+            origin=(0, 0),
+            scale=2,
+            color=color.red,
+            visible=False  # Hidden by default
+        )
+        
         # Try to load sounds, use dummy if not found
         try:
             self.shoot_sound = Audio('shoot_sound.wav', loop=False, autoplay=False)
+            self.empty_sound = Audio('empty_click.wav', loop=False, autoplay=False)
         except:
-            print("Sound file not found, using silent audio")
+            print("Sound files not found, using silent audio")
             self.shoot_sound = None
+            self.empty_sound = None
     
     def update(self):
         # Handle shooting cooldown
@@ -95,13 +108,24 @@ class Gun(Entity):
                 self.shoot_cooldown = self.fire_rate
         
         # Handle shooting input
-        if mouse.left and self.can_shoot and self.ammo > 0:
-            self.shoot()
+        if mouse.left and self.can_shoot:
+            if self.ammo > 0:
+                self.shoot()
+            else:
+                self.empty_click()
     
     def shoot(self):
         # Consume ammo
         self.ammo -= 1
         self.ammo_text.text = f"AMMO: {self.ammo}/{self.max_ammo}"
+        
+        # Update ammo color based on amount
+        if self.ammo == 0:
+            self.ammo_text.color = color.red
+        elif self.ammo <= 5:
+            self.ammo_text.color = color.orange
+        else:
+            self.ammo_text.color = color.white
         
         # Fire rate cooldown
         self.can_shoot = False
@@ -127,6 +151,9 @@ class Gun(Entity):
             curve=curve.linear
         )
         
+        # Hide "out of ammo" message if visible
+        self.out_of_ammo_text.visible = False
+        
         # Perform raycast from camera position
         hit_info = raycast(camera.world_position, camera.forward, distance=100)
         
@@ -144,6 +171,35 @@ class Gun(Entity):
             if hasattr(hit_info.entity, 'on_hit'):
                 hit_info.entity.on_hit()
     
+    def empty_click(self):
+        """Triggered when trying to shoot with no ammo"""
+        # Show "out of ammo" message
+        self.out_of_ammo_text.visible = True
+        
+        # Schedule it to disappear after 2 seconds
+        invoke(setattr, self.out_of_ammo_text, 'visible', False, delay=2)
+        
+        # Play empty click sound if available
+        if self.empty_sound:
+            self.empty_sound.play()
+        
+        # Small gun movement for feedback
+        self.animate_position(
+            self.original_position + Vec3(0, 0, 0.02),  # Smaller movement than actual shot
+            duration=0.05,
+            curve=curve.linear
+        )
+        self.animate_position(
+            self.original_position,
+            duration=0.1,
+            delay=0.05,
+            curve=curve.linear
+        )
+        
+        # Fire rate cooldown (shorter than normal shooting)
+        self.can_shoot = False
+        self.shoot_cooldown = 0.1
+    
     def reload(self):
         """Reload the weapon to full ammo"""
         if self.ammo == self.max_ammo:
@@ -152,4 +208,6 @@ class Gun(Entity):
         print("Reloading...")
         self.ammo = self.max_ammo
         self.ammo_text.text = f"AMMO: {self.ammo}/{self.max_ammo}"
+        self.ammo_text.color = color.white  # Reset color
+        self.out_of_ammo_text.visible = False  # Hide out of ammo message
         print("Reload complete!")
