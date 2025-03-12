@@ -1,0 +1,7 @@
+{
+  "fov": 70,
+  "sensitivity": 0.2,
+  "volume": 0.5,
+  "graphics_quality": "medium",
+  "resolution": [1920, 1080]
+}
