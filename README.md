@@ -80,3 +80,59 @@ A: Within the directory "Vitrix/vitrix/lib/UI/"
 
 <br>
 <h4>You can find out everything you else you need to know in the <a href="https://github.com/ShadityZ/Vitrix/blob/docs-development/docs/mainpage.md">Official Vitrix Documentation</a>!</h4>
+# Vitrix
+
+A user settings management system.
+
+## Overview
+
+Vitrix is a project that manages user settings through a JSON-based configuration system. The project provides functionality to store, retrieve, and modify user preferences.
+
+## Directory Structure
+
+```
+vitrix/
+└── user/
+    └── settings.json
+```
+
+## Features
+
+- JSON-based configuration
+- User settings management
+- Customizable preferences including:
+  - Field of view (FOV)
+  - Mouse sensitivity
+  - Volume control
+  - Graphics quality settings
+  - Screen resolution
+
+## Getting Started
+
+To use Vitrix in your project:
+
+1. Clone the repository
+2. Configure the settings.json file with your preferred options
+3. Import the Vitrix modules in your application
+
+## Configuration
+
+User settings are stored in `vitrix/user/settings.json`. The default configuration includes:
+
+```json
+{
+  "fov": 70,
+  "sensitivity": 0.2,
+  "volume": 0.5,
+  "graphics_quality": "medium",
+  "resolution": [1920, 1080]
+}
+```
+
+## License
+
+[License information]
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
